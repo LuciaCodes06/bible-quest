@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Quiz Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('faithquest2.1.jpg');
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('faithquest2.1.jpg');
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            z-index: 10;
+        }
+        .quiz-container {
+            text-align: center;
+            padding: 50px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            background-color: lightcoral;
+            width: 400px;
+            max-width: 90%;
+            height: 300px;
+            position: relative;
+        }
+        .question {
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+        .hint {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .input-answer {
+            font-size: 18px;
+            padding: 10px;
+            width: 90%;
+            margin-bottom: 15px;
+        }
+        .scrambled-letters {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .scrambled-letter {
+            width: 40px;
+            height: 40px;
+            margin: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .scrambled-letter.clicked {
+            background-color: #ccc;
+        }
+        .submit-btn, .hint-btn {
+            font-size: 18px;
+            padding: 8px 15px;
+            cursor: pointer;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            margin-top: 8px;
+        }
+        .result {
+            font-size: 18px;
+            margin-top: 20px;
+        }
+        .score {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-screen" id="loadingScreen">Loading...</div>
+
+<div class="quiz-container">
+    <div class="score" id="score">Score: 0</div>
+    <div class="question" id="question"></div>
+    <div class="scrambled-letters" id="scrambledLetters"></div>
+    <div class="hint" id="hint"></div>
+    <input type="text" id="answerInput" class="input-answer" placeholder="Enter your answer" disabled />
+    <button class="submit-btn" onclick="checkAnswer()">SUBMIT</button>
+    <button class="hint-btn" onclick="showHint()">SHOW HINT</button>
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+    setTimeout(() => {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('quizContainer').style.display = 'block';
+        }, 3000);
+
+    const questions = [
+        { question: "Who built an ark to survive the flood?", answer: "Noah", hint: "He was told by God to save his family and animals." },
+        { question: "What was the name of the first man created?", answer: "Adam", hint: "He was the first human." },
+        { question: "Who was swallowed by a great fish?", answer: "Jonah", hint: "He tried to run away from God's instructions." },
+        { question: "What is the shortest book in the New Testament?", answer: "Jude", hint: "This book has only one chapter." },
+        { question: "Who led the Israelites out of Egypt?", answer: "Moses", hint: "He received the Ten Commandments on Mount Sinai." },
+        { question: "Who betrayed Jesus for 30 pieces of silver?", answer: "Judas", hint: "He was one of the 12 disciples." },
+        { question: "What was the name of the giant slain by David?", answer: "Goliath", hint: "He was a Philistine warrior." },
+        { question: "Who was thrown into the lions' den?", answer: "Daniel", hint: "He prayed even when it was forbidden." },
+        { question: "What city’s walls fell after Joshua’s army marched around them?", answer: "Jericho", hint: "It’s known for its strong walls." },
+        { question: "What was the name of Jesus's mother?", answer: "Mary", hint: "She was visited by the angel Gabriel." },
+        { question: "Who was the wisest king of Israel?", answer: "Solomon", hint: "He asked God for wisdom instead of riches." },
+        { question: "What is the first book of the Bible?", answer: "Genesis", hint: "This book begins with the story of creation." },
+        { question: "Who was the strong man who lost his strength when his hair was cut?", answer: "Samson", hint: "He was betrayed by Delilah." },
+        { question: "Who was known as the disciple whom Jesus loved?", answer: "John", hint: "He was one of the 12 disciples and wrote several New Testament books." },
+        { question: "What food did God provide the Israelites in the desert?", answer: "Manna", hint: "It was called bread from heaven." },
+        { question: "Who interpreted Pharaoh’s dreams in Egypt?", answer: "Joseph", hint: "He was sold into slavery by his brothers." },
+        { question: "Who was the first person to see Jesus after His resurrection?", answer: "Mary Magdalene", hint: "She was a follower of Jesus who went to His tomb." },
+        { question: "What animal did Jesus ride into Jerusalem?", answer: "Donkey", hint: "This fulfilled a prophecy from Zechariah." },
+        { question: "Who was taken up to heaven in a whirlwind?", answer: "Elijah", hint: "He did not experience death and was a prophet of Israel." },
+        { question: "What prophet was sent to warn Nineveh?", answer: "Jonah", hint: "He initially tried to avoid his mission." },
+        { question: "What book of the Bible contains the story of the fiery furnace?", answer: "Daniel", hint: "It involves three men, Shadrach, Meshach, and Abednego." },
+        { question: "Who was the Roman governor who sentenced Jesus to be crucified?", answer: "Pilate", hint: "He famously washed his hands of the decision." },
+        { question: "Who was Ruth’s mother-in-law?", answer: "Naomi", hint: "She told Ruth to return to her people, but Ruth stayed with her." },
+        { question: "What river was Jesus baptized in?", answer: "Jordan", hint: "John the Baptist performed the baptism." },
+        { question: "Who built the first temple in Jerusalem?", answer: "Solomon", hint: "It became a central place of worship for Israel." },
+        { question: "Who was the father of Isaac?", answer: "Abraham", hint: "He is known as the 'Father of Faith'." },
+        { question: "What tower did people try to build to reach heaven?", answer: "Tower of Babel", hint: "God confused their language here." },
+        { question: "Who is known as the 'weeping prophet'?", answer: "Jeremiah", hint: "He lamented the fall of Jerusalem." },
+        { question: "Who killed a lion with his bare hands?", answer: "Samson", hint: "His strength was a gift from God as long as he followed certain rules." },
+        { question: "What young shepherd became king of Israel?", answer: "David", hint: "He is known for defeating Goliath and for his psalms." },
+        { question: "Who succeeded Moses and led the Israelites into the Promised Land?", answer: "Joshua", hint: "He was a great military leader." },
+        { question: "Who was the first king of Israel?", answer: "Saul", hint: "He was anointed by the prophet Samuel." },
+        { question: "Who was thrown into a fiery furnace but was unharmed?", answer: "Shadrach, Meshach, and Abednego", hint: "They were friends of Daniel." },
+        { question: "Who is known as the 'Apostle to the Gentiles'?", answer: "Paul", hint: "He wrote many letters to early Christian communities." },
+        { question: "What prophet confronted King Ahab and Queen Jezebel?", answer: "Elijah", hint: "He challenged the prophets of Baal on Mount Carmel." },
+        { question: "Which disciple walked on water with Jesus?", answer: "Peter", hint: "He briefly walked on water but then doubted and began to sink." },
+        { question: "What was the occupation of Matthew before he followed Jesus?", answer: "Tax Collector", hint: "He was disliked by many for his profession." },
+        { question: "What New Testament book details the spread of the early church?", answer: "Acts", hint: "It follows the ministry of the apostles after Jesus ascended." },
+        { question: "Who received the Ten Commandments from God?", answer: "Moses", hint: "It happened on Mount Sinai." },
+        { question: "What woman became queen of Persia and saved her people?", answer: "Esther", hint: "Her bravery is celebrated in the Jewish festival of Purim." },
+        { question: "Who was visited by an angel and told she would have a son named John?", answer: "Elizabeth", hint: "Her son would become John the Baptist." },
+        { question: "What city did God destroy with fire and brimstone?", answer: "Sodom", hint: "Lot and his family were told to flee this city." },
+        { question: "Who prayed in the belly of a great fish?", answer: "Jonah", hint: "He was swallowed after trying to escape God’s call." },
+        { question: "Who is the author of most of the Psalms?", answer: "David", hint: "He was known for his musical talents and love for God." },
+        { question: "What book describes the end times and the vision of John?", answer: "Revelation", hint: "It’s the last book of the New Testament." },
+        { question: "Who defeated the Midianites with just 300 men?", answer: "Gideon", hint: "He was chosen by God despite his own doubts." },
+        { question: "Who was known as a prophet and judge, and anointed the first two kings of Israel?", answer: "Samuel", hint: "He was a key figure in Israel’s transition to monarchy." },
+        { question: "Who was the Babylonian king that Daniel served under?", answer: "Nebuchadnezzar", hint: "He had dreams that Daniel interpreted." },
+        { question: "Who is credited with writing Proverbs, Ecclesiastes, and Song of Solomon?", answer: "Solomon", hint: "Known for his wisdom and writings." }
+    ];
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    shuffleArray(questions);
+
+    let currentQuestion = 0;
+    let score = 0;
+
+    function shuffleWord(word) {
+        const letters = word.split('');
+        for (let i = letters.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [letters[i], letters[j]] = [letters[j], letters[i]];
+        }
+        return letters.join('');
+    }
+
+    function loadQuestion() {
+        const questionData = questions[currentQuestion];
+        document.getElementById("question").innerText = questionData.question;
+        document.getElementById("hint").style.display = "none";
+        document.getElementById("hint").innerText = "Hint: " + questionData.hint;
+        document.getElementById("answerInput").value = "";
+        document.getElementById("result").innerText = "";
+
+        const correctAnswer = questionData.answer;
+        let scrambled = shuffleWord(correctAnswer);
+        let distractions = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('').filter(letter => !correctAnswer.includes(letter));
+        distractions = distractions.sort(() => Math.random() - 0.5).slice(0, correctAnswer.length);
+        let allLetters = scrambled.split('').concat(distractions).sort(() => Math.random() - 0.5);
+
+        const lettersContainer = document.getElementById("scrambledLetters");
+        lettersContainer.innerHTML = "";
+        allLetters.forEach(letter => {
+            const box = document.createElement("div");
+            box.classList.add("scrambled-letter");
+            box.textContent = letter.toUpperCase(); 
+            box.onclick = () => handleLetterClick(box, correctAnswer);
+            lettersContainer.appendChild(box);
+        });
+    }
+
+    function handleLetterClick(box, correctAnswer) {
+        const userInput = document.getElementById("answerInput");
+        userInput.value += box.textContent;
+        box.classList.add("clicked");
+        box.onclick = null; 
+    }
+
+    function showHint() {
+        document.getElementById("hint").style.display = "block";
+    }
+
+    function resetLetters() {
+        const boxes = document.querySelectorAll(".scrambled-letter");
+        boxes.forEach(box => {
+            box.classList.remove("clicked");
+            box.onclick = () => handleLetterClick(box, questions[currentQuestion].answer); 
+        });
+    }
+
+    function checkAnswer() {
+        const userAnswer = document.getElementById("answerInput").value.trim();
+        const correctAnswer = questions[currentQuestion].answer;
+
+        if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
+            document.getElementById("result").innerText = "Correct!";
+            score++;
+            document.getElementById("score").innerText = "Score: " + score;
+            currentQuestion++;
+
+            if (currentQuestion < questions.length) {
+                setTimeout(loadQuestion, 1000);
+            } else {
+                document.getElementById("result").innerText = "Congratulations! You've completed the quiz.";
+                document.getElementById("question").innerText = "";
+                document.getElementById("hint").innerText = "";
+                document.getElementById("answerInput").style.display = "none";
+                document.querySelector(".submit-btn").style.display = "none";
+                document.querySelector(".hint-btn").style.display = "none";
+                document.getElementById("scrambledLetters").innerText = "";
+            }
+        } else {
+            document.getElementById("result").innerText = "Incorrect! Try again.";
+            
+            document.getElementById("answerInput").value = "";
+            resetLetters();
+        }
+    }
+
+    loadQuestion();
+</script>
+
+</body>
+</html>

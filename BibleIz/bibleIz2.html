@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Book Quiz Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('faithquest3.jpg');
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('faithquest3.jpg');
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            z-index: 10;
+        }
+        .quiz-container {
+            text-align: center;
+            padding: 50px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            background-color: lightblue;
+            width: 400px;
+            max-width: 90%;
+            position: relative;
+        }
+        .verse {
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+        .input-answer {
+            font-size: 18px;
+            padding: 10px;
+            width: 90%;
+            margin-bottom: 15px;
+        }
+        .submit-btn {
+            font-size: 18px;
+            padding: 8px 15px;
+            cursor: pointer;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            margin-top: 8px;
+        }
+        .result {
+            font-size: 18px;
+            margin-top: 20px;
+        }
+        .score {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-screen" id="loadingScreen">Loading...</div>
+
+<div class="quiz-container">
+    <div class="score" id="score">Score: 0</div>
+    <div class="verse" id="verse"></div>
+    <input type="text" id="answerInput" class="input-answer" placeholder="Enter the book of the Bible" />
+    <button class="submit-btn" onclick="checkAnswer()">Submit</button>
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+    setTimeout(() => {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('quizContainer').style.display = 'block';
+        }, 3000);
+
+    const verses = [
+    { verse: "For God so loved the world that he gave his one and only Son...", book: "John", hint: "This gospel is known for its focus on love and the divinity of Christ." },
+    { verse: "The Lord is my shepherd; I shall not want...", book: "Psalms", hint: "This book contains songs and poems, many written by King David." },
+    { verse: "I can do all things through Christ who strengthens me...", book: "Philippians", hint: "A letter written by Paul while imprisoned, encouraging joy and resilience." },
+    { verse: "In the beginning God created the heavens and the earth...", book: "Genesis", hint: "This is the first book of the Bible, detailing the creation story." },
+    { verse: "The fruit of the Spirit is love, joy, peace, patience, kindness...", book: "Galatians", hint: "This letter discusses freedom in Christ and spiritual fruit." },
+    { verse: "The Lord bless you and keep you; the Lord make his face shine upon you...", book: "Numbers", hint: "A book often associated with the wilderness journey of Israel." },
+    { verse: "For I know the plans I have for you, declares the Lord, plans to prosper you...", book: "Jeremiah", hint: "This prophet warned of Judah’s exile but promised hope." },
+    { verse: "The people who walked in darkness have seen a great light...", book: "Isaiah", hint: "This prophetic book contains many Messianic prophecies." },
+    { verse: "Though I walk through the valley of the shadow of death, I will fear no evil...", book: "Psalms", hint: "This book is often a source of comfort and praise." },
+    { verse: "And we know that in all things God works for the good of those who love him...", book: "Romans", hint: "A foundational letter on salvation and Christian living." },
+    { verse: "Trust in the Lord with all your heart and lean not on your own understanding...", book: "Proverbs", hint: "This book is full of wisdom sayings." },
+    { verse: "Come to me, all who are weary and burdened, and I will give you rest...", book: "Matthew", hint: "This gospel is known for the Sermon on the Mount." },
+    { verse: "The steadfast love of the Lord never ceases; his mercies never come to an end...", book: "Lamentations", hint: "A book of sorrowful poetry, often associated with Jeremiah." },
+    { verse: "And now these three remain: faith, hope, and love. But the greatest of these is love...", book: "1 Corinthians", hint: "Paul wrote this letter addressing a divided church in Greece." },
+    { verse: "The Lord is my light and my salvation; whom shall I fear?", book: "Psalms", hint: "A book of poetic prayers and praises." },
+    { verse: "Put on the full armor of God, so that you can take your stand against the devil’s schemes...", book: "Ephesians", hint: "Paul wrote this letter to a church in Asia Minor." },
+    { verse: "For the wages of sin is death, but the gift of God is eternal life in Christ Jesus our Lord...", book: "Romans", hint: "A letter explaining salvation by grace through faith." },
+    { verse: "But those who hope in the Lord will renew their strength. They will soar on wings like eagles...", book: "Isaiah", hint: "This prophet spoke often of strength and hope for Israel." },
+    { verse: "I am the way, the truth, and the life. No one comes to the Father except through me...", book: "John", hint: "The gospel known for 'I am' statements by Jesus." },
+    { verse: "But the fruit of the Spirit is love, joy, peace, patience, kindness, goodness, faithfulness...", book: "Galatians", hint: "Paul lists qualities of the Spirit in this letter." },
+    { verse: "Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you...", book: "Joshua", hint: "A book about Israel’s conquest of the Promised Land." },
+    { verse: "In the beginning was the Word, and the Word was with God, and the Word was God...", book: "John", hint: "This gospel begins with a poetic introduction about 'the Word'." },
+    { verse: "And the peace of God, which transcends all understanding, will guard your hearts and minds...", book: "Philippians", hint: "A letter about joy and peace despite trials." },
+    { verse: "You shall love the Lord your God with all your heart and with all your soul and with all your mind...", book: "Matthew", hint: "One of the synoptic gospels, focusing on Jesus’ teachings." },
+    { verse: "If God is for us, who can be against us?", book: "Romans", hint: "A key verse about God's protection in Paul's letter to the Romans." },
+    { verse: "Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving...", book: "Philippians", hint: "This letter has themes of peace, joy, and prayer." },
+    { verse: "For all have sinned and fall short of the glory of God...", book: "Romans", hint: "This letter discusses universal sin and salvation." },
+    { verse: "The Lord is my rock, my fortress, and my deliverer...", book: "Psalms", hint: "A book often expressing refuge and safety in God." },
+    { verse: "Jesus wept.", book: "John", hint: "The shortest verse in the New Testament." },
+    { verse: "Even though I walk through the darkest valley, I will fear no evil...", book: "Psalms", hint: "This verse comes from a well-known psalm of comfort." },
+    { verse: "And God said, 'Let there be light,' and there was light...", book: "Genesis", hint: "The very beginning of creation." },
+    { verse: "The Lord your God is with you, the Mighty Warrior who saves...", book: "Zephaniah", hint: "A lesser-known prophet offering hope and protection." },
+    { verse: "But seek first his kingdom and his righteousness, and all these things will be given to you...", book: "Matthew", hint: "This gospel records the Sermon on the Mount." },
+    { verse: "The Lord is my strength and my shield; my heart trusts in him...", book: "Psalms", hint: "A book full of praises and declarations of faith." },
+    { verse: "But they who wait for the Lord shall renew their strength; they shall mount up with wings like eagles...", book: "Isaiah", hint: "This prophet’s writings inspire hope and renewal." },
+    { verse: "Blessed are the peacemakers, for they will be called children of God...", book: "Matthew", hint: "One of the Beatitudes in the gospel of Jesus' teachings." },
+    { verse: "The Lord will fight for you; you need only to be still...", book: "Exodus", hint: "The second book of the Bible, featuring Moses and the Israelites." },
+    { verse: "For where two or three gather in my name, there am I with them...", book: "Matthew", hint: "Jesus speaks about community and gathering." },
+    { verse: "I have been crucified with Christ and I no longer live, but Christ lives in me...", book: "Galatians", hint: "Paul’s letter explaining life in the Spirit." },
+    { verse: "Your word is a lamp for my feet, a light on my path...", book: "Psalms", hint: "A book often referenced for wisdom and guidance." },
+    { verse: "For where your treasure is, there your heart will be also...", book: "Matthew", hint: "Part of Jesus’ teaching about earthly vs. heavenly treasures." },
+    { verse: "And if I have prophetic powers, and understand all mysteries and all knowledge...", book: "1 Corinthians", hint: "Paul’s letter discussing love and spiritual gifts." },
+    { verse: "We love because he first loved us...", book: "1 John", hint: "A letter emphasizing love as God’s central command." },
+    { verse: "As for me and my house, we will serve the Lord...", book: "Joshua", hint: "A declaration by a leader after conquering the land." },
+    { verse: "Do everything in love...", book: "1 Corinthians", hint: "Paul’s closing advice to the church in Corinth." },
+    { verse: "But if serving the Lord seems undesirable to you, then choose for yourselves this day whom you will serve...", book: "Joshua", hint: "A challenge to choose faith given by Israel's leader." },
+    { verse: "In my Father’s house are many rooms; if it were not so, I would have told you...", book: "John", hint: "A comforting promise about heaven from Jesus." },
+    { verse: "Be still, and know that I am God...", book: "Psalms", hint: "This verse calls for trust and stillness in the Lord." },
+    { verse: "The fear of the Lord is the beginning of wisdom...", book: "Proverbs", hint: "This book offers foundational wisdom on life and morality." },
+    { verse: "For nothing will be impossible with God...", book: "Luke", hint: "This gospel records the birth and miracles of Jesus." },
+    { verse: "But the Lord stood at my side and gave me strength...", book: "2 Timothy", hint: "A letter from Paul, his last recorded letter." },
+    { verse: "He has told you, O man, what is good; and what does the Lord require of you...", book: "Micah", hint: "This prophet's words are often cited for justice and mercy." }
+];
+
+    let currentVerse = 0;
+    let score = 0;
+
+    function loadVerse() {
+        const verseData = verses[currentVerse];
+        document.getElementById("verse").innerText = verseData.verse;
+        document.getElementById("answerInput").value = "";
+        document.getElementById("result").innerText = "";
+    }
+
+    function checkAnswer() {
+        const userAnswer = document.getElementById("answerInput").value.trim();
+        const correctBook = verses[currentVerse].book;
+
+        if (userAnswer.toLowerCase() === correctBook.toLowerCase()) {
+            document.getElementById("result").innerText = "Correct!";
+            score++;
+            document.getElementById("score").innerText = "Score: " + score;
+            currentVerse++;
+
+            if (currentVerse < verses.length) {
+                setTimeout(loadVerse, 1000);
+            } else {
+                document.getElementById("result").innerText = "Congratulations! You've completed the quiz.";
+                document.getElementById("verse").innerText = "";
+                document.getElementById("answerInput").style.display = "none";
+                document.querySelector(".submit-btn").style.display = "none";
+            }
+        } else {
+            document.getElementById("result").innerText = "Incorrect! Try again.";
+            document.getElementById("answerInput").value = "";
+        }
+    }
+
+    loadVerse();
+</script>
+</body>
+</html>
